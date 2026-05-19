@@ -1,0 +1,1561 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>数の宇宙 ｜ 数直線</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DotGothic16&family=M+PLUS+Rounded+1c:wght@500;700;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg-1: #080d22;
+  --bg-2: #1d0c30;
+  --bg-3: #2a0e2a;
+  --line: #f4e9c8;
+  --neg: #4d9eff;
+  --neg-dim: #2c64b8;
+  --neg-light: #82bcff;
+  --pos: #ff8552;
+  --pos-dim: #c95a2e;
+  --pos-light: #ffb088;
+  --zero: #ffd966;
+  --zero-dim: #c9a832;
+  --text: #f4e9c8;
+  --text-dim: #b0a4c8;
+  --pill-bg: rgba(18, 22, 50, 0.7);
+  --pill-border: rgba(244, 233, 200, 0.22);
+  --violet: #c266dd;
+  --green: #5ee0a8;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+html, body {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+  font-family: 'M PLUS Rounded 1c', 'BIZ UDPGothic', 'Hiragino Maru Gothic ProN', system-ui, sans-serif;
+  background: radial-gradient(ellipse at 30% 20%, #1c1442 0%, transparent 55%),
+              radial-gradient(ellipse at 80% 90%, #3a0f3f 0%, transparent 60%),
+              linear-gradient(165deg, var(--bg-1) 0%, var(--bg-2) 60%, var(--bg-3) 100%);
+  background-attachment: fixed;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: none;
+  overscroll-behavior: none;
+  color: var(--text);
+}
+#canvas {
+  display: block;
+  width: 100vw;
+  height: 100vh;
+  cursor: grab;
+}
+#canvas:active { cursor: grabbing; }
+#canvas.jumpMode,
+#canvas.jumpMode:active { cursor: crosshair; }
+
+.title {
+  position: fixed;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--pill-bg);
+  border: 1.5px solid var(--pill-border);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  padding: 9px 22px 10px;
+  border-radius: 18px;
+  pointer-events: none;
+  box-shadow: 0 0 24px rgba(0, 0, 0, 0.4), 0 0 40px rgba(194, 102, 221, 0.08) inset;
+  z-index: 5;
+  transition: opacity 0.2s;
+  text-align: center;
+  line-height: 1;
+}
+.title.hidden { opacity: 0; }
+.title-main {
+  display: block;
+  font-family: 'DotGothic16', monospace;
+  font-weight: 400;
+  font-size: 21px;
+  color: var(--text);
+  letter-spacing: 0.22em;
+  text-shadow: 0 0 12px rgba(244, 233, 200, 0.35),
+               0 0 24px rgba(255, 217, 102, 0.18);
+}
+.title-step {
+  display: block;
+  font-family: 'M PLUS Rounded 1c', sans-serif;
+  font-weight: 700;
+  font-size: 11px;
+  color: var(--zero);
+  letter-spacing: 0.18em;
+  margin-top: 5px;
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 0 8px rgba(255, 217, 102, 0.45);
+}
+.title-step::before { content: '✦ '; opacity: 0.65; }
+.title-step::after  { content: ' ✦'; opacity: 0.65; }
+
+.hint {
+  position: fixed;
+  top: 86px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-dim);
+  pointer-events: none;
+  letter-spacing: 0.1em;
+  opacity: 1;
+  transition: opacity 0.6s ease;
+  z-index: 5;
+  white-space: nowrap;
+  background: rgba(10, 12, 35, 0.55);
+  padding: 4px 12px;
+  border-radius: 11px;
+  border: 1px solid rgba(244, 233, 200, 0.1);
+}
+.hint.fade { opacity: 0; }
+
+.btn {
+  position: fixed;
+  background: rgba(18, 22, 48, 0.78);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  border: 2.5px solid var(--text);
+  border-radius: 50%;
+  font-family: 'M PLUS Rounded 1c', sans-serif;
+  font-weight: 900;
+  color: var(--text);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  touch-action: manipulation;
+  transition: transform 0.06s, box-shadow 0.06s, filter 0.1s;
+  padding: 0;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.btn:active {
+  transform: translateY(3px) !important;
+  filter: brightness(1.25);
+}
+
+#btnMinus, #btnPlus {
+  bottom: 24px;
+  width: 86px;
+  height: 86px;
+  flex-direction: column;
+  gap: 0;
+  padding: 6px 0 10px;
+}
+#btnMinus {
+  left: 24px;
+  border-color: var(--neg);
+  color: var(--neg-light);
+  box-shadow: 0 5px 0 var(--neg-dim),
+              0 0 22px rgba(77, 158, 255, 0.32),
+              0 0 40px rgba(77, 158, 255, 0.12) inset;
+  text-shadow: 0 0 12px rgba(130, 188, 255, 0.6);
+}
+#btnPlus {
+  right: 24px;
+  border-color: var(--pos);
+  color: var(--pos-light);
+  box-shadow: 0 5px 0 var(--pos-dim),
+              0 0 22px rgba(255, 133, 82, 0.32),
+              0 0 40px rgba(255, 133, 82, 0.12) inset;
+  text-shadow: 0 0 12px rgba(255, 176, 136, 0.6);
+}
+.btn-sign {
+  display: block;
+  font-size: 38px;
+  line-height: 0.85;
+  font-weight: 900;
+}
+.btn-step {
+  display: block;
+  font-size: 18px;
+  line-height: 1;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+  margin-top: 2px;
+}
+.btn-step.l3 { font-size: 16px; }
+.btn-step.l4 { font-size: 14px; }
+.btn-step.l5 { font-size: 12px; }
+.btn-step.l6 { font-size: 11px; }
+
+#btnHome {
+  bottom: 36px;
+  left: 50%;
+  width: 60px;
+  height: 60px;
+  font-size: 26px;
+  color: var(--zero);
+  border-color: var(--zero);
+  box-shadow: 0 4px 0 var(--zero-dim),
+              0 0 20px rgba(255, 217, 102, 0.4),
+              0 0 36px rgba(255, 217, 102, 0.14) inset;
+  text-shadow: 0 0 14px rgba(255, 217, 102, 0.7);
+  transform: translateX(-50%);
+}
+#btnHome:active {
+  transform: translateX(-50%) translateY(3px) !important;
+}
+
+#btnZoomIn, #btnZoomOut {
+  right: 24px;
+  width: 50px;
+  height: 50px;
+  font-size: 26px;
+  color: var(--text);
+  border-color: var(--text);
+  box-shadow: 0 3px 0 rgba(244, 233, 200, 0.35),
+              0 0 16px rgba(244, 233, 200, 0.22);
+}
+#btnZoomIn { top: 92px; }
+#btnZoomOut { top: 152px; }
+
+#btnLocate {
+  top: 212px;
+  right: 24px;
+  width: 54px;
+  height: 54px;
+  font-size: 26px;
+  color: var(--zero);
+  border-color: var(--zero);
+  box-shadow: 0 3px 0 var(--zero-dim),
+              0 0 18px rgba(255, 217, 102, 0.3);
+  line-height: 1;
+}
+#btnLocate.bunnyOffscreen {
+  animation: pulseLocate 1.4s ease-in-out infinite;
+}
+@keyframes pulseLocate {
+  0%, 100% {
+    box-shadow: 0 3px 0 var(--zero-dim),
+                0 0 18px rgba(255, 217, 102, 0.3);
+    border-color: var(--zero);
+  }
+  50% {
+    box-shadow: 0 3px 0 var(--zero-dim),
+                0 0 34px rgba(255, 217, 102, 0.75),
+                0 0 56px rgba(255, 217, 102, 0.35);
+    border-color: #ffe699;
+  }
+}
+
+.btn-pill {
+  position: fixed;
+  height: 50px;
+  padding: 0 18px;
+  border-radius: 25px;
+  border: 2.5px solid var(--text);
+  background: rgba(18, 22, 48, 0.78);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  font-family: 'M PLUS Rounded 1c', sans-serif;
+  font-size: 16px;
+  font-weight: 900;
+  color: var(--text);
+  cursor: pointer;
+  z-index: 10;
+  touch-action: manipulation;
+  transition: transform 0.06s, filter 0.1s, box-shadow 0.06s;
+  user-select: none;
+  -webkit-user-select: none;
+  box-shadow: 0 3px 0 rgba(244, 233, 200, 0.35),
+              0 0 14px rgba(244, 233, 200, 0.18);
+  letter-spacing: 0.08em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.btn-pill:active {
+  transform: translateY(3px);
+  filter: brightness(1.2);
+}
+
+#btnPair { top: 92px; left: 24px; }
+#btnPair.active {
+  border-color: var(--violet);
+  color: #e0aeed;
+  box-shadow: 0 3px 0 rgba(194, 102, 221, 0.5),
+              0 0 22px rgba(194, 102, 221, 0.45);
+  text-shadow: 0 0 10px rgba(224, 174, 237, 0.6);
+}
+
+#btnJump { top: 152px; left: 24px; }
+#btnJump.active {
+  border-color: var(--green);
+  color: #a9f0ce;
+  box-shadow: 0 3px 0 rgba(94, 224, 168, 0.5),
+              0 0 22px rgba(94, 224, 168, 0.45);
+  text-shadow: 0 0 10px rgba(169, 240, 206, 0.6);
+}
+
+#jumpBar {
+  position: fixed;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: none;
+  align-items: center;
+  gap: 8px;
+  background: rgba(14, 26, 28, 0.92);
+  border: 2.5px solid var(--green);
+  border-radius: 30px;
+  padding: 6px 8px 6px 16px;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.5),
+              0 0 26px rgba(94, 224, 168, 0.25);
+  z-index: 15;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+#jumpBar.active { display: flex; }
+.jumpBarLabel {
+  font-family: 'M PLUS Rounded 1c', sans-serif;
+  font-size: 13px;
+  font-weight: 900;
+  color: #a9f0ce;
+  letter-spacing: 0.1em;
+  white-space: nowrap;
+  text-shadow: 0 0 8px rgba(94, 224, 168, 0.5);
+}
+#jumpInput {
+  width: 116px;
+  height: 40px;
+  border: 2px solid rgba(94, 224, 168, 0.3);
+  border-radius: 20px;
+  padding: 0 12px;
+  font-family: 'M PLUS Rounded 1c', sans-serif;
+  font-size: 17px;
+  font-weight: 700;
+  text-align: center;
+  color: var(--text);
+  background: rgba(8, 18, 14, 0.7);
+  outline: none;
+  font-variant-numeric: tabular-nums;
+}
+#jumpInput::placeholder {
+  color: rgba(176, 164, 200, 0.5);
+}
+#jumpInput:focus {
+  border-color: var(--green);
+  background: rgba(20, 36, 28, 0.9);
+  box-shadow: 0 0 14px rgba(94, 224, 168, 0.4);
+}
+#jumpInput.error {
+  border-color: #ff6464;
+  background: rgba(64, 12, 12, 0.7);
+  animation: shake 0.4s;
+}
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
+}
+#jumpBarOK {
+  height: 40px;
+  padding: 0 18px;
+  border: none;
+  border-radius: 20px;
+  background: var(--green);
+  color: #0a1f15;
+  font-family: 'M PLUS Rounded 1c', sans-serif;
+  font-size: 15px;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: filter 0.1s, transform 0.1s;
+  box-shadow: 0 0 14px rgba(94, 224, 168, 0.5);
+}
+#jumpBarOK:active { filter: brightness(0.85); transform: translateY(1px); }
+#jumpBarClose {
+  height: 40px;
+  width: 40px;
+  border: none;
+  border-radius: 20px;
+  background: rgba(244, 233, 200, 0.14);
+  color: var(--text);
+  font-size: 18px;
+  font-weight: 900;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: background 0.1s;
+}
+#jumpBarClose:active { background: rgba(244, 233, 200, 0.25); }
+
+#jumpHint {
+  position: fixed;
+  top: 76px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: none;
+  font-family: 'M PLUS Rounded 1c', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--green);
+  letter-spacing: 0.08em;
+  pointer-events: none;
+  white-space: nowrap;
+  background: rgba(14, 26, 28, 0.85);
+  padding: 4px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(94, 224, 168, 0.25);
+  z-index: 14;
+  text-shadow: 0 0 8px rgba(94, 224, 168, 0.4);
+}
+#jumpHint.active { display: block; }
+</style>
+</head>
+<body>
+<canvas id="canvas"></canvas>
+
+<div class="title" id="title">
+  <span class="title-main">数 直 線</span>
+  <span class="title-step" id="titleStep">メモリ 1</span>
+</div>
+
+<div class="hint" id="hint">スワイプ・ピンチで 数の宇宙を旅する</div>
+
+<div id="jumpBar">
+  <span class="jumpBarLabel">どこへ？</span>
+  <input id="jumpInput" type="text" inputmode="decimal" placeholder="例: -0.5" autocomplete="off">
+  <button id="jumpBarOK">とぶ</button>
+  <button id="jumpBarClose" aria-label="とじる">✕</button>
+</div>
+<div id="jumpHint">または 数直線をタップ</div>
+
+<button id="btnPair" class="btn-pill" aria-label="対の数の表示切替">対の数</button>
+<button id="btnJump" class="btn-pill" aria-label="ジャンプモード">ジャンプ</button>
+
+<button class="btn" id="btnMinus" aria-label="マイナス方向にジャンプ">
+  <span class="btn-sign">−</span>
+  <span class="btn-step" id="btnMinusStep">1</span>
+</button>
+<button class="btn" id="btnPlus" aria-label="プラス方向にジャンプ">
+  <span class="btn-sign">＋</span>
+  <span class="btn-step" id="btnPlusStep">1</span>
+</button>
+<button class="btn" id="btnHome" aria-label="0にもどる">0</button>
+<button class="btn" id="btnZoomIn" aria-label="ひろげる">＋</button>
+<button class="btn" id="btnZoomOut" aria-label="ちぢめる">−</button>
+<button class="btn" id="btnLocate" aria-label="うさぎの場所へ">🐰</button>
+
+<script>
+'use strict';
+
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+const hintEl = document.getElementById('hint');
+const titleEl = document.getElementById('title');
+const titleStepEl = document.getElementById('titleStep');
+const btnPairEl = document.getElementById('btnPair');
+const btnJumpEl = document.getElementById('btnJump');
+const btnMinusStepEl = document.getElementById('btnMinusStep');
+const btnPlusStepEl = document.getElementById('btnPlusStep');
+const jumpBarEl = document.getElementById('jumpBar');
+const jumpHintEl = document.getElementById('jumpHint');
+const jumpInputEl = document.getElementById('jumpInput');
+const jumpBarOKEl = document.getElementById('jumpBarOK');
+const jumpBarCloseEl = document.getElementById('jumpBarClose');
+const btnLocateEl = document.getElementById('btnLocate');
+
+let dpr = 1, W = 0, H = 0;
+
+let centerValue = 0;
+let pixelsPerUnit = 80;
+const MIN_PPU = 3;
+const MAX_PPU = 1800000;
+const DEFAULT_PPU = 80;
+const ZOOM_FACTOR = 1.8;
+
+let charValue = 0;
+let charAnimValue = 0;
+let charJumpY = 0;
+
+let showPair = false;
+let jumpMode = false;
+let tapCandidate = null;
+
+// 宇宙テーマカラー
+const COL_LINE      = '#f4e9c8';
+const COL_NEG       = '#4d9eff';
+const COL_NEG_LIGHT = '#82bcff';
+const COL_POS       = '#ff8552';
+const COL_POS_LIGHT = '#ffb088';
+const COL_ZERO      = '#ffd966';
+const COL_TEXT      = '#f4e9c8';
+const COL_TEXT_DIM  = '#b0a4c8';
+const COL_VIOLET    = '#c266dd';
+
+// === 数値ユーティリティ ===
+function cleanFP(v) { return Math.round(v * 1e9) / 1e9; }
+
+function decimalsForStep(step) {
+  if (step >= 1) return 0;
+  return Math.max(0, Math.round(-Math.log10(step) + 1e-9));
+}
+
+function quantize(v, step) {
+  const decimals = decimalsForStep(step);
+  const factor = Math.pow(10, decimals);
+  return Math.round(v * factor) / factor;
+}
+
+function formatNumber(n, step) {
+  if (Math.abs(n) >= 10000) return n.toLocaleString('en-US');
+  const decimals = decimalsForStep(step);
+  if (decimals === 0) return String(Math.round(n));
+  return n.toFixed(decimals);
+}
+
+function formatCharValue(v) {
+  v = cleanFP(v);
+  if (Number.isInteger(v)) return String(v);
+  let s = v.toFixed(9);
+  s = s.replace(/0+$/, '').replace(/\.$/, '');
+  return s;
+}
+
+function formatStep(step) {
+  if (step >= 1) return String(step);
+  return step.toFixed(decimalsForStep(step));
+}
+
+function parseFlexibleNumber(text) {
+  if (!text) return { value: NaN, precision: 1 };
+  let s = String(text).trim();
+  if (!s) return { value: NaN, precision: 1 };
+  s = s.replace(/[０-９]/g, c => String.fromCharCode(c.charCodeAt(0) - 0xFEE0));
+  s = s.replace(/[．。]/g, '.');
+  s = s.replace(/[−ー－‐–—ｰ]/g, '-');
+  s = s.replace(/[＋]/g, '+');
+  s = s.replace(/^\+/, '');
+  if (!/^-?(\d+(\.\d+)?|\.\d+)$/.test(s)) return { value: NaN, precision: 1 };
+  const value = parseFloat(s);
+  const dotIdx = s.indexOf('.');
+  let precision = 1;
+  if (dotIdx !== -1) {
+    const decimals = s.length - dotIdx - 1;
+    precision = Math.pow(10, -decimals);
+  }
+  return { value, precision };
+}
+
+let hintFaded = false;
+function fadeHint() {
+  if (hintFaded) return;
+  hintFaded = true;
+  hintEl.classList.add('fade');
+  setTimeout(() => { hintEl.style.display = 'none'; }, 700);
+}
+
+// === 星屑(背景) ===
+let stars = [];
+function regenerateStars() {
+  stars = [];
+  const count = Math.floor((W * H) / 5500);
+  for (let i = 0; i < count; i++) {
+    const r = Math.random();
+    stars.push({
+      x: Math.random() * W,
+      y: Math.random() * H,
+      r: r < 0.85 ? Math.random() * 0.9 + 0.3 : Math.random() * 1.8 + 1.0,
+      a: r < 0.85 ? Math.random() * 0.55 + 0.15 : Math.random() * 0.4 + 0.55,
+      big: r >= 0.85,
+    });
+  }
+}
+
+function resize() {
+  dpr = window.devicePixelRatio || 1;
+  W = window.innerWidth;
+  H = window.innerHeight;
+  canvas.width = Math.round(W * dpr);
+  canvas.height = Math.round(H * dpr);
+  canvas.style.width = W + 'px';
+  canvas.style.height = H + 'px';
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  regenerateStars();
+  draw();
+}
+window.addEventListener('resize', resize);
+
+function valueToX(v) { return W / 2 + (v - centerValue) * pixelsPerUnit; }
+function xToValue(x) { return centerValue + (x - W / 2) / pixelsPerUnit; }
+
+// ===== 目盛り計算 =====
+const niceSteps = [
+  0.0001, 0.0002, 0.0005,
+  0.001, 0.002, 0.005,
+  0.01, 0.02, 0.05,
+  0.1, 0.2, 0.5,
+  1, 2, 5,
+  10, 20, 50,
+  100, 200, 500,
+  1000, 2000, 5000,
+  10000, 20000, 50000
+];
+
+const minorMap = new Map([
+  [0.0001, 0.0001], [0.0002, 0.0001], [0.0005, 0.0001],
+  [0.001, 0.001],   [0.002, 0.001],   [0.005, 0.001],
+  [0.01, 0.01],     [0.02, 0.01],     [0.05, 0.01],
+  [0.1, 0.1],       [0.2, 0.1],       [0.5, 0.1],
+  [1, 1],           [2, 1],           [5, 1],
+  [10, 1],          [20, 5],          [50, 10],
+  [100, 10],        [200, 50],        [500, 100],
+  [1000, 100],      [2000, 500],      [5000, 1000],
+  [10000, 1000],    [20000, 5000],    [50000, 10000]
+]);
+
+function minSpacingFor(step) {
+  if (step >= 1)     return 80;
+  if (step >= 0.1)   return 100;
+  if (step >= 0.01)  return 120;
+  if (step >= 0.001) return 140;
+  return 160;
+}
+
+function chooseSteps(ppu) {
+  let major = niceSteps[niceSteps.length - 1];
+  for (const s of niceSteps) {
+    if (s * ppu >= minSpacingFor(s)) { major = s; break; }
+  }
+  let minor = minorMap.get(major) || major;
+  if (minor * ppu < 6) minor = major;
+  return { major, minor };
+}
+
+function colorForValue(v) {
+  if (v === 0) return COL_ZERO;
+  return v < 0 ? COL_NEG : COL_POS;
+}
+
+function colorForValueLight(v) {
+  if (v === 0) return COL_ZERO;
+  return v < 0 ? COL_NEG_LIGHT : COL_POS_LIGHT;
+}
+
+function roundRect(x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y);
+  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+  ctx.lineTo(x + w, y + h - r);
+  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  ctx.lineTo(x + r, y + h);
+  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+  ctx.lineTo(x, y + r);
+  ctx.quadraticCurveTo(x, y, x + r, y);
+  ctx.closePath();
+}
+
+// ===== 描画 =====
+function draw() {
+  ctx.clearRect(0, 0, W, H);
+
+  const lineY = Math.round(H / 2);
+
+  // --- 背景: 星屑 ---
+  drawStars(lineY);
+
+  const { major, minor } = chooseSteps(pixelsPerUnit);
+  const leftV = xToValue(-40);
+  const rightV = xToValue(W + 40);
+  const zeroX = valueToX(0);
+
+  // --- 星雲 (ネビュラ) ---
+  drawNebula(lineY, zeroX);
+
+  // --- マイナス・プラス文字 ---
+  const negEnd = Math.min(W, Math.max(0, zeroX));
+  const posStart = Math.max(0, Math.min(W, zeroX));
+  ctx.font = '900 13px "M PLUS Rounded 1c", sans-serif';
+  ctx.textBaseline = 'middle';
+  if (negEnd > 70) {
+    ctx.fillStyle = 'rgba(130, 188, 255, 0.55)';
+    ctx.textAlign = 'left';
+    ctx.fillText('◀ マイナス', 16, lineY - 47);
+  }
+  if (posStart < W - 70) {
+    ctx.fillStyle = 'rgba(255, 176, 136, 0.55)';
+    ctx.textAlign = 'right';
+    ctx.fillText('プラス ▶', W - 16, lineY - 47);
+  }
+
+  // --- メイン線(発光) ---
+  ctx.save();
+  ctx.shadowColor = COL_LINE;
+  ctx.shadowBlur = 14;
+  ctx.strokeStyle = COL_LINE;
+  ctx.lineWidth = 4;
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(10, lineY);
+  ctx.lineTo(W - 10, lineY);
+  ctx.stroke();
+  ctx.restore();
+
+  // --- 矢印 ---
+  ctx.save();
+  ctx.shadowColor = COL_LINE;
+  ctx.shadowBlur = 10;
+  ctx.fillStyle = COL_LINE;
+  ctx.beginPath();
+  ctx.moveTo(0, lineY);
+  ctx.lineTo(20, lineY - 12);
+  ctx.lineTo(20, lineY + 12);
+  ctx.closePath();
+  ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(W, lineY);
+  ctx.lineTo(W - 20, lineY - 12);
+  ctx.lineTo(W - 20, lineY + 12);
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+
+  // --- 細かい目盛り ---
+  if (minor !== major) {
+    ctx.lineWidth = 1.6;
+    ctx.lineCap = 'butt';
+    const minorStartIdx = Math.ceil(leftV / minor - 1e-9);
+    const minorEndIdx = Math.floor(rightV / minor + 1e-9);
+    const ratio = Math.round(major / minor);
+
+    ctx.strokeStyle = 'rgba(130, 188, 255, 0.55)';
+    ctx.beginPath();
+    for (let i = minorStartIdx; i <= minorEndIdx; i++) {
+      if (i >= 0 || i % ratio === 0) continue;
+      const v = i * minor;
+      const x = valueToX(v);
+      ctx.moveTo(x, lineY - 9);
+      ctx.lineTo(x, lineY + 9);
+    }
+    ctx.stroke();
+
+    ctx.strokeStyle = 'rgba(255, 176, 136, 0.55)';
+    ctx.beginPath();
+    for (let i = minorStartIdx; i <= minorEndIdx; i++) {
+      if (i <= 0 || i % ratio === 0) continue;
+      const v = i * minor;
+      const x = valueToX(v);
+      ctx.moveTo(x, lineY - 9);
+      ctx.lineTo(x, lineY + 9);
+    }
+    ctx.stroke();
+  }
+
+  // --- 大目盛 + ラベル ---
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'top';
+  ctx.lineCap = 'round';
+  const majorStartIdx = Math.ceil(leftV / major - 1e-9);
+  const majorEndIdx = Math.floor(rightV / major + 1e-9);
+  for (let i = majorStartIdx; i <= majorEndIdx; i++) {
+    const v = quantize(i * major, major);
+    const x = valueToX(v);
+    const isZero = v === 0;
+
+    if (isZero) {
+      // 0は太陽として描画
+      drawZeroSun(x, lineY);
+    } else {
+      const c = colorForValueLight(v);
+      ctx.save();
+      ctx.shadowColor = c;
+      ctx.shadowBlur = 8;
+      ctx.strokeStyle = c;
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(x, lineY - 20);
+      ctx.lineTo(x, lineY + 20);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    // ラベル
+    if (isZero) {
+      ctx.save();
+      ctx.shadowColor = COL_ZERO;
+      ctx.shadowBlur = 18;
+      ctx.fillStyle = COL_ZERO;
+      ctx.font = '900 32px "M PLUS Rounded 1c", sans-serif';
+      ctx.fillText('0', x, lineY + 34);
+      ctx.restore();
+    } else {
+      const c = colorForValueLight(v);
+      ctx.save();
+      ctx.shadowColor = c;
+      ctx.shadowBlur = 6;
+      ctx.fillStyle = c;
+      const decimals = decimalsForStep(major);
+      let fontSize = 24;
+      if (decimals === 3) fontSize = 21;
+      else if (decimals >= 4) fontSize = 19;
+      ctx.font = `700 ${fontSize}px "M PLUS Rounded 1c", sans-serif`;
+      ctx.fillText(formatNumber(v, major), x, lineY + 32);
+      ctx.restore();
+    }
+  }
+
+  drawOppositePair();
+  drawCharacter();
+  updateLocateButton();
+}
+
+// うさぎが画面外にいるときだけパルス発光させて存在を知らせる
+function updateLocateButton() {
+  const x = valueToX(charAnimValue);
+  const offscreen = x < -10 || x > W + 10;
+  btnLocateEl.classList.toggle('bunnyOffscreen', offscreen);
+}
+
+function drawStars(lineY) {
+  ctx.fillStyle = '#ffffff';
+  for (const star of stars) {
+    // 数直線の近くは避けてラベルの読みやすさを守る
+    if (Math.abs(star.y - lineY) < 75) continue;
+    if (star.big) {
+      ctx.save();
+      ctx.globalAlpha = star.a;
+      ctx.shadowColor = '#ffffff';
+      ctx.shadowBlur = 4;
+      ctx.beginPath();
+      ctx.arc(star.x, star.y, star.r, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    } else {
+      ctx.globalAlpha = star.a;
+      ctx.beginPath();
+      ctx.arc(star.x, star.y, star.r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+  ctx.globalAlpha = 1;
+}
+
+function drawNebula(lineY, zeroX) {
+  // マイナス側ネビュラ(青)
+  if (zeroX > 0) {
+    const negEnd = Math.min(W, zeroX);
+    const g = ctx.createLinearGradient(0, lineY - 90, 0, lineY + 90);
+    g.addColorStop(0, 'rgba(60, 110, 200, 0)');
+    g.addColorStop(0.5, 'rgba(60, 110, 200, 0.22)');
+    g.addColorStop(1, 'rgba(60, 110, 200, 0)');
+    ctx.fillStyle = g;
+    ctx.fillRect(0, lineY - 90, negEnd, 180);
+
+    const g2 = ctx.createRadialGradient(0, lineY, 0, 0, lineY, Math.max(W * 0.6, negEnd));
+    g2.addColorStop(0, 'rgba(80, 130, 220, 0.18)');
+    g2.addColorStop(0.7, 'rgba(60, 100, 200, 0.04)');
+    g2.addColorStop(1, 'rgba(60, 100, 200, 0)');
+    ctx.fillStyle = g2;
+    ctx.fillRect(0, lineY - 130, negEnd, 260);
+  }
+
+  // プラス側ネビュラ(オレンジ)
+  if (zeroX < W) {
+    const posStart = Math.max(0, zeroX);
+    const g = ctx.createLinearGradient(0, lineY - 90, 0, lineY + 90);
+    g.addColorStop(0, 'rgba(230, 130, 80, 0)');
+    g.addColorStop(0.5, 'rgba(230, 130, 80, 0.22)');
+    g.addColorStop(1, 'rgba(230, 130, 80, 0)');
+    ctx.fillStyle = g;
+    ctx.fillRect(posStart, lineY - 90, W - posStart, 180);
+
+    const g2 = ctx.createRadialGradient(W, lineY, 0, W, lineY, Math.max(W * 0.6, W - posStart));
+    g2.addColorStop(0, 'rgba(255, 140, 90, 0.18)');
+    g2.addColorStop(0.7, 'rgba(230, 110, 60, 0.04)');
+    g2.addColorStop(1, 'rgba(230, 100, 60, 0)');
+    ctx.fillStyle = g2;
+    ctx.fillRect(posStart, lineY - 130, W - posStart, 260);
+  }
+}
+
+function drawZeroSun(x, lineY) {
+  // 太陽のような0
+  ctx.save();
+  const g = ctx.createRadialGradient(x, lineY, 0, x, lineY, 38);
+  g.addColorStop(0, 'rgba(255, 230, 150, 0.55)');
+  g.addColorStop(0.4, 'rgba(255, 200, 90, 0.25)');
+  g.addColorStop(1, 'rgba(255, 200, 90, 0)');
+  ctx.fillStyle = g;
+  ctx.beginPath();
+  ctx.arc(x, lineY, 38, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.shadowColor = COL_ZERO;
+  ctx.shadowBlur = 22;
+  ctx.strokeStyle = COL_ZERO;
+  ctx.lineWidth = 4.5;
+  ctx.beginPath();
+  ctx.moveTo(x, lineY - 22);
+  ctx.lineTo(x, lineY + 22);
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawOppositePair() {
+  if (!showPair) return;
+  if (charValue === 0) return;
+
+  const lineY = Math.round(H / 2);
+  const bunnyX = valueToX(charAnimValue);
+  const oppX = valueToX(-charAnimValue);
+  const zeroPX = valueToX(0);
+  const oppositeValue = cleanFP(-charValue);
+
+  const leftEdge = -120, rightEdge = W + 120;
+  if ((bunnyX < leftEdge && oppX < leftEdge) || (bunnyX > rightEdge && oppX > rightEdge)) {
+    return;
+  }
+
+  const arcWidth = Math.abs(oppX - bunnyX);
+  const arcStartY = lineY - 12;
+  const desiredPeakY = Math.max(45, lineY - 95 - arcWidth * 0.04);
+  const controlY = 2 * desiredPeakY - arcStartY;
+
+  // 弧 - 宇宙の架け橋
+  ctx.save();
+  ctx.shadowColor = COL_VIOLET;
+  ctx.shadowBlur = 12;
+  const grad = ctx.createLinearGradient(Math.min(bunnyX, oppX), 0, Math.max(bunnyX, oppX), 0);
+  grad.addColorStop(0, 'rgba(130, 188, 255, 0.85)');
+  grad.addColorStop(0.5, 'rgba(194, 102, 221, 0.6)');
+  grad.addColorStop(1, 'rgba(255, 176, 136, 0.85)');
+
+  ctx.strokeStyle = grad;
+  ctx.lineWidth = 2.5;
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(bunnyX, arcStartY);
+  ctx.quadraticCurveTo(zeroPX, controlY, oppX, arcStartY);
+  ctx.stroke();
+  ctx.restore();
+
+  if (arcWidth > 120) {
+    ctx.font = '900 12px "M PLUS Rounded 1c", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    const labelY = desiredPeakY - 4;
+    const labelText = '対の数';
+    const m = ctx.measureText(labelText);
+    const padX = 10;
+    const lw = m.width + padX * 2;
+    const lh = 22;
+    ctx.fillStyle = 'rgba(20, 14, 40, 0.92)';
+    ctx.strokeStyle = 'rgba(194, 102, 221, 0.6)';
+    ctx.lineWidth = 1.5;
+    roundRect(zeroPX - lw / 2, labelY - lh / 2, lw, lh, 11);
+    ctx.fill();
+    ctx.stroke();
+    ctx.save();
+    ctx.shadowColor = COL_VIOLET;
+    ctx.shadowBlur = 8;
+    ctx.fillStyle = '#e0aeed';
+    ctx.fillText(labelText, zeroPX, labelY + 1);
+    ctx.restore();
+  }
+
+  // 対の数のうさぎ
+  if (oppX > -50 && oppX < W + 50) {
+    const oppColor = colorForValueLight(oppositeValue);
+
+    ctx.save();
+    ctx.shadowColor = oppColor;
+    ctx.shadowBlur = 20;
+    ctx.strokeStyle = oppColor;
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(oppX, lineY, 18, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+
+    // 対のうさぎの淡い光
+    const g = ctx.createRadialGradient(oppX, lineY - 36, 0, oppX, lineY - 36, 38);
+    g.addColorStop(0, `rgba(255, 240, 200, 0.22)`);
+    g.addColorStop(1, 'rgba(255, 240, 200, 0)');
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.arc(oppX, lineY - 36, 38, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.globalAlpha = 0.42;
+    ctx.font = '40px "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('🐰', oppX, lineY - 36);
+    ctx.globalAlpha = 1;
+  }
+
+  if (bunnyX > -50 && bunnyX < W + 50) {
+    const bunnyColor = colorForValueLight(charValue);
+    ctx.save();
+    ctx.shadowColor = bunnyColor;
+    ctx.shadowBlur = 20;
+    ctx.strokeStyle = bunnyColor;
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(bunnyX, lineY, 18, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+  }
+}
+
+function drawCharacter() {
+  const lineY = Math.round(H / 2);
+  const x = valueToX(charAnimValue);
+  const charY = lineY - 50 + charJumpY;
+
+  if (x < -60 || x > W + 60) {
+    drawOffscreenIndicator(x < 0 ? 'left' : 'right');
+    return;
+  }
+
+  const c = colorForValueLight(charValue);
+
+  // 着地スポット - 暖色の放射光
+  const heightFactor = Math.max(0, -charJumpY / 55);
+  const glowAlpha = 0.55 * (1 - heightFactor * 0.7);
+  const glowScale = 1 - heightFactor * 0.45;
+  const glowR = 32 * glowScale;
+  const sg = ctx.createRadialGradient(x, lineY - 4, 0, x, lineY - 4, glowR);
+  sg.addColorStop(0, `rgba(255, 220, 150, ${glowAlpha})`);
+  sg.addColorStop(0.5, `rgba(255, 200, 130, ${glowAlpha * 0.4})`);
+  sg.addColorStop(1, 'rgba(255, 200, 130, 0)');
+  ctx.fillStyle = sg;
+  ctx.beginPath();
+  ctx.ellipse(x, lineY - 4, glowR, 12 * glowScale, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // 値表示ピル
+  const valText = formatCharValue(charValue);
+  let pillFontSize = 24;
+  if (valText.length >= 8) pillFontSize = 17;
+  else if (valText.length >= 6) pillFontSize = 21;
+  ctx.font = `900 ${pillFontSize}px "M PLUS Rounded 1c", sans-serif`;
+  const metrics = ctx.measureText(valText);
+  const pillW = Math.max(60, metrics.width + 32);
+  const pillH = 40;
+  const pillX = x - pillW / 2;
+  const pillY = charY - 76;
+
+  ctx.save();
+  ctx.shadowColor = c;
+  ctx.shadowBlur = 14;
+  ctx.fillStyle = 'rgba(18, 22, 50, 0.88)';
+  ctx.strokeStyle = c;
+  ctx.lineWidth = 2.5;
+  roundRect(pillX, pillY, pillW, pillH, 20);
+  ctx.fill();
+  ctx.stroke();
+  ctx.restore();
+
+  // 三角しっぽ
+  ctx.fillStyle = 'rgba(18, 22, 50, 0.88)';
+  ctx.beginPath();
+  ctx.moveTo(x - 9, pillY + pillH - 1);
+  ctx.lineTo(x + 9, pillY + pillH - 1);
+  ctx.lineTo(x, pillY + pillH + 10);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = c;
+  ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  ctx.moveTo(x - 9, pillY + pillH);
+  ctx.lineTo(x, pillY + pillH + 10);
+  ctx.lineTo(x + 9, pillY + pillH);
+  ctx.stroke();
+
+  ctx.save();
+  ctx.shadowColor = c;
+  ctx.shadowBlur = 8;
+  ctx.fillStyle = c;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(valText, x, pillY + pillH / 2 + 2);
+  ctx.restore();
+
+  // うさぎ周りの光輪
+  const haloR = 32 + heightFactor * 6;
+  const hg = ctx.createRadialGradient(x, charY, 0, x, charY, haloR);
+  hg.addColorStop(0, `rgba(255, 240, 200, 0.32)`);
+  hg.addColorStop(0.6, `rgba(255, 220, 150, 0.10)`);
+  hg.addColorStop(1, 'rgba(255, 220, 150, 0)');
+  ctx.fillStyle = hg;
+  ctx.beginPath();
+  ctx.arc(x, charY, haloR, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.font = '50px "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", system-ui, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('🐰', x, charY);
+}
+
+function drawOffscreenIndicator(side) {
+  const lineY = Math.round(H / 2);
+  const indicatorX = side === 'left' ? 42 : W - 42;
+  const indicatorY = lineY - 50;
+  const c = colorForValueLight(charValue);
+
+  ctx.save();
+  ctx.shadowColor = c;
+  ctx.shadowBlur = 18;
+  ctx.fillStyle = 'rgba(18, 22, 50, 0.92)';
+  ctx.strokeStyle = c;
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.arc(indicatorX, indicatorY, 26, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+  ctx.restore();
+
+  ctx.font = '24px "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji"';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('🐰', indicatorX, indicatorY - 2);
+
+  ctx.save();
+  ctx.shadowColor = c;
+  ctx.shadowBlur = 10;
+  ctx.fillStyle = c;
+  ctx.beginPath();
+  if (side === 'left') {
+    ctx.moveTo(indicatorX - 34, indicatorY);
+    ctx.lineTo(indicatorX - 18, indicatorY - 10);
+    ctx.lineTo(indicatorX - 18, indicatorY + 10);
+  } else {
+    ctx.moveTo(indicatorX + 34, indicatorY);
+    ctx.lineTo(indicatorX + 18, indicatorY - 10);
+    ctx.lineTo(indicatorX + 18, indicatorY + 10);
+  }
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+
+  const charText = formatCharValue(charValue);
+  let fs = 16;
+  if (charText.length >= 7) fs = 11;
+  else if (charText.length >= 5) fs = 13;
+  ctx.save();
+  ctx.shadowColor = c;
+  ctx.shadowBlur = 6;
+  ctx.font = `900 ${fs}px "M PLUS Rounded 1c", sans-serif`;
+  ctx.fillStyle = c;
+  ctx.fillText(charText, indicatorX, indicatorY + 24);
+  ctx.restore();
+}
+
+// === UI 更新 ===
+function updateUI() {
+  const { minor } = chooseSteps(pixelsPerUnit);
+  const stepText = formatStep(minor);
+  titleStepEl.textContent = 'メモリ ' + stepText;
+
+  const len = stepText.length;
+  function applyLenClass(el) {
+    el.classList.remove('l3', 'l4', 'l5', 'l6');
+    if (len >= 6) el.classList.add('l6');
+    else if (len >= 5) el.classList.add('l5');
+    else if (len >= 4) el.classList.add('l4');
+    else if (len >= 3) el.classList.add('l3');
+  }
+  btnMinusStepEl.textContent = stepText;
+  btnPlusStepEl.textContent = stepText;
+  applyLenClass(btnMinusStepEl);
+  applyLenClass(btnPlusStepEl);
+}
+
+// === アニメーション ===
+let animRAF = null;
+function cancelAnimation() {
+  if (animRAF) {
+    cancelAnimationFrame(animRAF);
+    animRAF = null;
+  }
+}
+
+function jump(direction) {
+  cancelAnimation();
+  const { minor } = chooseSteps(pixelsPerUnit);
+  const step = minor;
+  const startVal = charAnimValue;
+  const startCV = centerValue;
+  charJumpY = 0;
+
+  const targetVal = cleanFP(charValue + direction * step);
+  charValue = targetVal;
+
+  const currentX = W / 2 + (targetVal - centerValue) * pixelsPerUnit;
+  let targetCV = centerValue;
+  if (currentX < W * 0.2) {
+    targetCV = targetVal + 0.15 * W / pixelsPerUnit;
+  } else if (currentX > W * 0.8) {
+    targetCV = targetVal - 0.15 * W / pixelsPerUnit;
+  }
+
+  const startT = performance.now();
+  const dur = 380;
+
+  const step1 = (now) => {
+    const t = Math.min(1, (now - startT) / dur);
+    const ease = 1 - Math.pow(1 - t, 3);
+
+    charAnimValue = startVal + (targetVal - startVal) * ease;
+    centerValue = startCV + (targetCV - startCV) * ease;
+    charJumpY = -55 * Math.sin(Math.PI * t);
+
+    draw();
+
+    if (t < 1) {
+      animRAF = requestAnimationFrame(step1);
+    } else {
+      charJumpY = 0;
+      charAnimValue = targetVal;
+      animRAF = null;
+      draw();
+    }
+  };
+  animRAF = requestAnimationFrame(step1);
+}
+
+function warpToValue(targetVal, targetPPU) {
+  cancelAnimation();
+  targetVal = cleanFP(targetVal);
+  const startVal = charAnimValue;
+  const startCV = centerValue;
+  const startPPU = pixelsPerUnit;
+  const endPPU = (targetPPU === undefined) ? pixelsPerUnit : targetPPU;
+  charJumpY = 0;
+  charValue = targetVal;
+
+  let targetCV;
+  const finalX = W / 2 + (targetVal - centerValue) * endPPU;
+  if (endPPU !== startPPU) {
+    targetCV = targetVal;
+  } else if (finalX < W * 0.15 || finalX > W * 0.85) {
+    targetCV = targetVal;
+  } else if (finalX < W * 0.2) {
+    targetCV = targetVal + 0.15 * W / endPPU;
+  } else if (finalX > W * 0.8) {
+    targetCV = targetVal - 0.15 * W / endPPU;
+  } else {
+    targetCV = centerValue;
+  }
+
+  const distance = Math.abs(targetVal - startVal);
+  const zoomChange = Math.abs(Math.log(endPPU / startPPU));
+  const dur = Math.min(900, 320 + Math.min(distance, 50) * 14 + zoomChange * 120);
+  const arcHeight = Math.min(130, 55 + Math.min(distance, 30) * 6);
+
+  const startT = performance.now();
+  const step = (now) => {
+    const t = Math.min(1, (now - startT) / dur);
+    const ease = 1 - Math.pow(1 - t, 3);
+
+    charAnimValue = startVal + (targetVal - startVal) * ease;
+    centerValue = startCV + (targetCV - startCV) * ease;
+    pixelsPerUnit = startPPU * Math.pow(endPPU / startPPU, ease);
+    charJumpY = -arcHeight * Math.sin(Math.PI * t);
+
+    draw();
+    updateUI();
+
+    if (t < 1) {
+      animRAF = requestAnimationFrame(step);
+    } else {
+      charJumpY = 0;
+      charAnimValue = targetVal;
+      pixelsPerUnit = endPPU;
+      animRAF = null;
+      draw();
+      updateUI();
+    }
+  };
+  animRAF = requestAnimationFrame(step);
+}
+
+function animateView(targetCV, targetPPU, duration, alsoMoveBunnyTo) {
+  cancelAnimation();
+  const startCV = centerValue;
+  const startPPU = pixelsPerUnit;
+  const startCharVal = charAnimValue;
+  const moveBunny = alsoMoveBunnyTo !== undefined;
+  const targetCharVal = moveBunny ? alsoMoveBunnyTo : charAnimValue;
+  if (moveBunny) charValue = cleanFP(alsoMoveBunnyTo);
+
+  const startT = performance.now();
+  const step = (now) => {
+    const t = Math.min(1, (now - startT) / duration);
+    const ease = 1 - Math.pow(1 - t, 3);
+    centerValue = startCV + (targetCV - startCV) * ease;
+    pixelsPerUnit = startPPU * Math.pow(targetPPU / startPPU, ease);
+    if (moveBunny) charAnimValue = startCharVal + (targetCharVal - startCharVal) * ease;
+    draw();
+    updateUI();
+    if (t < 1) animRAF = requestAnimationFrame(step);
+    else animRAF = null;
+  };
+  animRAF = requestAnimationFrame(step);
+}
+
+// === ジャンプモード ===
+function enterJumpMode() {
+  jumpMode = true;
+  btnJumpEl.classList.add('active');
+  jumpBarEl.classList.add('active');
+  jumpHintEl.classList.add('active');
+  titleEl.classList.add('hidden');
+  canvas.classList.add('jumpMode');
+  jumpInputEl.value = '';
+  jumpInputEl.classList.remove('error');
+  fadeHint();
+}
+
+function exitJumpMode() {
+  if (!jumpMode) return;
+  jumpMode = false;
+  btnJumpEl.classList.remove('active');
+  jumpBarEl.classList.remove('active');
+  jumpHintEl.classList.remove('active');
+  titleEl.classList.remove('hidden');
+  canvas.classList.remove('jumpMode');
+  jumpInputEl.blur();
+  tapCandidate = null;
+}
+
+function handleJumpInputSubmit() {
+  const result = parseFlexibleNumber(jumpInputEl.value);
+  if (isNaN(result.value)) {
+    jumpInputEl.classList.remove('error');
+    void jumpInputEl.offsetWidth;
+    jumpInputEl.classList.add('error');
+    setTimeout(() => jumpInputEl.classList.remove('error'), 500);
+    return;
+  }
+
+  let targetPPU = pixelsPerUnit;
+  if (result.precision < 1) {
+    const needPPU = minSpacingFor(result.precision) / result.precision;
+    if (needPPU > pixelsPerUnit) {
+      targetPPU = Math.min(MAX_PPU, needPPU);
+    }
+  } else {
+    if (pixelsPerUnit > DEFAULT_PPU * 4) {
+      targetPPU = DEFAULT_PPU;
+    }
+  }
+
+  warpToValue(result.value, targetPPU);
+  exitJumpMode();
+}
+
+// === ポインター ===
+const pointers = new Map();
+let dragLastX = 0;
+let dragLastT = 0;
+let velocity = 0;
+let pinch = null;
+
+canvas.addEventListener('pointerdown', e => {
+  cancelAnimation();
+  velocity = 0;
+  charJumpY = 0;
+  charAnimValue = charValue;
+  if (!jumpMode) fadeHint();
+  try { canvas.setPointerCapture(e.pointerId); } catch (_) {}
+  pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+
+  if (pointers.size === 1) {
+    dragLastX = e.clientX;
+    dragLastT = e.timeStamp;
+    pinch = null;
+    tapCandidate = { x: e.clientX, y: e.clientY, t: e.timeStamp };
+  } else if (pointers.size === 2) {
+    tapCandidate = null;
+    const [a, b] = Array.from(pointers.values());
+    const midX = (a.x + b.x) / 2;
+    pinch = {
+      initDist: Math.hypot(a.x - b.x, a.y - b.y) || 1,
+      initPPU: pixelsPerUnit,
+      anchorValue: xToValue(midX),
+    };
+  }
+});
+
+canvas.addEventListener('pointermove', e => {
+  if (!pointers.has(e.pointerId)) return;
+  pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+
+  if (pointers.size === 2 && pinch) {
+    tapCandidate = null;
+    const [a, b] = Array.from(pointers.values());
+    const dist = Math.hypot(a.x - b.x, a.y - b.y);
+    const midX = (a.x + b.x) / 2;
+    pixelsPerUnit = Math.max(MIN_PPU, Math.min(MAX_PPU, pinch.initPPU * (dist / pinch.initDist)));
+    centerValue = pinch.anchorValue - (midX - W / 2) / pixelsPerUnit;
+    draw();
+    updateUI();
+  } else if (pointers.size === 1) {
+    if (tapCandidate) {
+      const dx = e.clientX - tapCandidate.x;
+      const dy = e.clientY - tapCandidate.y;
+      if (Math.abs(dx) > 6 || Math.abs(dy) > 6) {
+        tapCandidate = null;
+        dragLastX = e.clientX;
+        dragLastT = e.timeStamp;
+      }
+    } else {
+      const dx = e.clientX - dragLastX;
+      const dt = Math.max(1, e.timeStamp - dragLastT);
+      centerValue -= dx / pixelsPerUnit;
+      velocity = -dx / pixelsPerUnit / dt * 16;
+      dragLastX = e.clientX;
+      dragLastT = e.timeStamp;
+      draw();
+    }
+  }
+});
+
+function onPointerEnd(e) {
+  if (!pointers.has(e.pointerId)) return;
+  const wasPinching = pointers.size === 2;
+  const couldBeTap = pointers.size === 1 && tapCandidate &&
+    (e.timeStamp - tapCandidate.t < 400);
+  pointers.delete(e.pointerId);
+
+  if (pointers.size === 0) {
+    if (couldBeTap && jumpMode) {
+      const tapX = tapCandidate.x;
+      tapCandidate = null;
+      const { minor } = chooseSteps(pixelsPerUnit);
+      const rawV = xToValue(tapX);
+      const snappedV = quantize(Math.round(rawV / minor) * minor, minor);
+      exitJumpMode();
+      warpToValue(snappedV);
+      return;
+    }
+    if (!wasPinching && Math.abs(velocity) > 0.005) {
+      const step = () => {
+        velocity *= 0.93;
+        if (Math.abs(velocity) < 0.002) {
+          animRAF = null;
+          return;
+        }
+        centerValue += velocity;
+        draw();
+        animRAF = requestAnimationFrame(step);
+      };
+      animRAF = requestAnimationFrame(step);
+    }
+    pinch = null;
+    tapCandidate = null;
+  } else if (pointers.size === 1) {
+    pinch = null;
+    const last = Array.from(pointers.values())[0];
+    dragLastX = last.x;
+    dragLastT = e.timeStamp;
+    velocity = 0;
+    tapCandidate = null;
+  }
+}
+canvas.addEventListener('pointerup', onPointerEnd);
+canvas.addEventListener('pointercancel', onPointerEnd);
+
+canvas.addEventListener('wheel', e => {
+  e.preventDefault();
+  cancelAnimation();
+  fadeHint();
+  const factor = Math.exp(-e.deltaY * 0.0015);
+  const anchorX = e.clientX;
+  const anchorValue = xToValue(anchorX);
+  pixelsPerUnit = Math.max(MIN_PPU, Math.min(MAX_PPU, pixelsPerUnit * factor));
+  centerValue = anchorValue - (anchorX - W / 2) / pixelsPerUnit;
+  draw();
+  updateUI();
+}, { passive: false });
+
+// === ボタン ===
+document.getElementById('btnMinus').addEventListener('click', () => {
+  exitJumpMode();
+  fadeHint();
+  jump(-1);
+});
+document.getElementById('btnPlus').addEventListener('click', () => {
+  exitJumpMode();
+  fadeHint();
+  jump(+1);
+});
+document.getElementById('btnHome').addEventListener('click', () => {
+  exitJumpMode();
+  fadeHint();
+  animateView(0, DEFAULT_PPU, 480, 0);
+});
+btnLocateEl.addEventListener('click', () => {
+  exitJumpMode();
+  fadeHint();
+  // ズームレベルは保ち、視点だけ うさぎ位置 へなめらかに移動
+  animateView(charValue, pixelsPerUnit, 480);
+});
+document.getElementById('btnZoomIn').addEventListener('click', () => {
+  fadeHint();
+  animateView(centerValue, Math.min(MAX_PPU, pixelsPerUnit * ZOOM_FACTOR), 220);
+});
+document.getElementById('btnZoomOut').addEventListener('click', () => {
+  fadeHint();
+  animateView(centerValue, Math.max(MIN_PPU, pixelsPerUnit / ZOOM_FACTOR), 220);
+});
+btnPairEl.addEventListener('click', () => {
+  fadeHint();
+  showPair = !showPair;
+  btnPairEl.classList.toggle('active', showPair);
+  draw();
+});
+btnJumpEl.addEventListener('click', () => {
+  fadeHint();
+  if (jumpMode) {
+    exitJumpMode();
+  } else {
+    enterJumpMode();
+  }
+});
+jumpBarOKEl.addEventListener('click', handleJumpInputSubmit);
+jumpBarCloseEl.addEventListener('click', exitJumpMode);
+jumpInputEl.addEventListener('keydown', e => {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    handleJumpInputSubmit();
+  } else if (e.key === 'Escape') {
+    e.preventDefault();
+    exitJumpMode();
+  }
+});
+
+// === 初期化 ===
+resize();
+updateUI();
+Promise.all([
+  document.fonts.load('900 32px "M PLUS Rounded 1c"'),
+  document.fonts.load('400 21px "DotGothic16"'),
+]).then(() => draw()).catch(() => {});
+
+setTimeout(fadeHint, 6000);
+</script>
+</body>
+</html>
