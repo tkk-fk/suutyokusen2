@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>数の宇宙 ｜ 数直線</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -27,6 +27,11 @@
   --pill-border: rgba(244, 233, 200, 0.22);
   --violet: #c266dd;
   --green: #5ee0a8;
+  /* セーフエリア(iPhoneのノッチ・ホームバーを避ける) */
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
 }
 
 * {
@@ -62,7 +67,7 @@ html, body {
 
 .title {
   position: fixed;
-  top: 14px;
+  top: calc(14px + var(--safe-top));
   left: 50%;
   transform: translateX(-50%);
   background: var(--pill-bg);
@@ -105,24 +110,32 @@ html, body {
 
 .hint {
   position: fixed;
-  top: 86px;
+  bottom: calc(126px + var(--safe-bottom));
   left: 50%;
   transform: translateX(-50%);
   font-size: 12px;
   font-weight: 500;
   color: var(--text-dim);
   pointer-events: none;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.08em;
   opacity: 1;
   transition: opacity 0.6s ease;
   z-index: 5;
   white-space: nowrap;
   background: rgba(10, 12, 35, 0.55);
-  padding: 4px 12px;
+  padding: 3px 11px;
   border-radius: 11px;
   border: 1px solid rgba(244, 233, 200, 0.1);
+  max-width: calc(100vw - 32px);
 }
 .hint.fade { opacity: 0; }
+@media (max-width: 380px) {
+  .hint { font-size: 10px; padding: 2px 8px; }
+  #jumpInput { width: 88px; font-size: 15px; }
+  #jumpBarOK { padding: 0 12px; font-size: 14px; }
+  .jumpBarLabel { font-size: 12px; }
+  #jumpBar { padding: 5px 6px 5px 12px; gap: 6px; }
+}
 
 .btn {
   position: fixed;
@@ -151,7 +164,7 @@ html, body {
 }
 
 #btnMinus, #btnPlus {
-  bottom: 24px;
+  bottom: calc(24px + var(--safe-bottom));
   width: 86px;
   height: 86px;
   flex-direction: column;
@@ -159,7 +172,7 @@ html, body {
   padding: 6px 0 10px;
 }
 #btnMinus {
-  left: 24px;
+  left: calc(24px + var(--safe-left));
   border-color: var(--neg);
   color: var(--neg-light);
   box-shadow: 0 5px 0 var(--neg-dim),
@@ -168,7 +181,7 @@ html, body {
   text-shadow: 0 0 12px rgba(130, 188, 255, 0.6);
 }
 #btnPlus {
-  right: 24px;
+  right: calc(24px + var(--safe-right));
   border-color: var(--pos);
   color: var(--pos-light);
   box-shadow: 0 5px 0 var(--pos-dim),
@@ -196,7 +209,7 @@ html, body {
 .btn-step.l6 { font-size: 11px; }
 
 #btnHome {
-  bottom: 36px;
+  bottom: calc(36px + var(--safe-bottom));
   left: 50%;
   width: 60px;
   height: 60px;
@@ -214,7 +227,7 @@ html, body {
 }
 
 #btnZoomIn, #btnZoomOut {
-  right: 24px;
+  right: calc(24px + var(--safe-right));
   width: 50px;
   height: 50px;
   font-size: 26px;
@@ -223,12 +236,12 @@ html, body {
   box-shadow: 0 3px 0 rgba(244, 233, 200, 0.35),
               0 0 16px rgba(244, 233, 200, 0.22);
 }
-#btnZoomIn { top: 92px; }
-#btnZoomOut { top: 152px; }
+#btnZoomIn { top: calc(110px + var(--safe-top)); }
+#btnZoomOut { top: calc(170px + var(--safe-top)); }
 
 #btnLocate {
-  top: 212px;
-  right: 24px;
+  top: calc(230px + var(--safe-top));
+  right: calc(24px + var(--safe-right));
   width: 54px;
   height: 54px;
   font-size: 26px;
@@ -286,7 +299,7 @@ html, body {
   filter: brightness(1.2);
 }
 
-#btnPair { top: 92px; left: 24px; }
+#btnPair { top: calc(110px + var(--safe-top)); left: calc(24px + var(--safe-left)); }
 #btnPair.active {
   border-color: var(--violet);
   color: #e0aeed;
@@ -295,7 +308,7 @@ html, body {
   text-shadow: 0 0 10px rgba(224, 174, 237, 0.6);
 }
 
-#btnJump { top: 152px; left: 24px; }
+#btnJump { top: calc(170px + var(--safe-top)); left: calc(24px + var(--safe-left)); }
 #btnJump.active {
   border-color: var(--green);
   color: #a9f0ce;
@@ -306,7 +319,7 @@ html, body {
 
 #jumpBar {
   position: fixed;
-  top: 14px;
+  top: calc(14px + var(--safe-top));
   left: 50%;
   transform: translateX(-50%);
   display: none;
@@ -321,6 +334,7 @@ html, body {
   z-index: 15;
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
+  max-width: calc(100vw - 40px);
 }
 #jumpBar.active { display: flex; }
 .jumpBarLabel {
@@ -399,7 +413,7 @@ html, body {
 
 #jumpHint {
   position: fixed;
-  top: 76px;
+  top: calc(76px + var(--safe-top));
   left: 50%;
   transform: translateX(-50%);
   display: none;
@@ -418,6 +432,44 @@ html, body {
   text-shadow: 0 0 8px rgba(94, 224, 168, 0.4);
 }
 #jumpHint.active { display: block; }
+
+/* ============= タブレット・PC ============= */
+@media (min-width: 768px) {
+  .title { padding: 11px 26px 12px; }
+  .title-main { font-size: 24px; }
+  .title-step { font-size: 13px; }
+
+  .hint { font-size: 13px; padding: 5px 14px; bottom: calc(142px + var(--safe-bottom)); }
+
+  #btnMinus, #btnPlus { width: 100px; height: 100px; padding: 8px 0 12px; }
+  .btn-sign { font-size: 44px; }
+  .btn-step { font-size: 20px; }
+  .btn-step.l3 { font-size: 18px; }
+  .btn-step.l4 { font-size: 16px; }
+  .btn-step.l5 { font-size: 14px; }
+  .btn-step.l6 { font-size: 12px; }
+
+  #btnHome { width: 70px; height: 70px; font-size: 30px; }
+  #btnZoomIn, #btnZoomOut { width: 56px; height: 56px; font-size: 28px; }
+  #btnLocate { width: 62px; height: 62px; font-size: 30px; }
+
+  .btn-pill { height: 56px; padding: 0 22px; font-size: 17px; }
+
+  #btnPair { top: calc(120px + var(--safe-top)); }
+  #btnJump { top: calc(186px + var(--safe-top)); }
+  #btnZoomIn { top: calc(120px + var(--safe-top)); }
+  #btnZoomOut { top: calc(186px + var(--safe-top)); }
+  #btnLocate { top: calc(252px + var(--safe-top)); }
+}
+
+/* ============= マウス操作デバイス用ホバー ============= */
+@media (hover: hover) and (pointer: fine) {
+  .btn:hover, .btn-pill:hover {
+    filter: brightness(1.18);
+  }
+  #jumpBarOK:hover { filter: brightness(1.08); }
+  #jumpBarClose:hover { background: rgba(244, 233, 200, 0.22); }
+}
 </style>
 </head>
 <body>
@@ -1544,6 +1596,58 @@ jumpInputEl.addEventListener('keydown', e => {
   } else if (e.key === 'Escape') {
     e.preventDefault();
     exitJumpMode();
+  }
+});
+
+// === キーボードショートカット (PC用) ===
+// 矢印 ←→ : -/+ジャンプ / +- : ズーム / 0 : 原点へ / b : うさぎへ
+// j : ジャンプモード切替 / p : 対の数切替 / Esc : ジャンプモード閉じる
+document.addEventListener('keydown', e => {
+  if (e.target === jumpInputEl) return;
+  if (e.metaKey || e.ctrlKey || e.altKey) return;
+
+  let handled = true;
+  switch (e.key) {
+    case 'ArrowRight':
+      jump(+1); break;
+    case 'ArrowLeft':
+      jump(-1); break;
+    case '+':
+    case '=':
+      animateView(centerValue, Math.min(MAX_PPU, pixelsPerUnit * ZOOM_FACTOR), 220);
+      break;
+    case '-':
+    case '_':
+      animateView(centerValue, Math.max(MIN_PPU, pixelsPerUnit / ZOOM_FACTOR), 220);
+      break;
+    case '0':
+      animateView(0, DEFAULT_PPU, 480, 0);
+      break;
+    case 'b':
+    case 'B':
+      animateView(charValue, pixelsPerUnit, 480);
+      break;
+    case 'j':
+    case 'J':
+      if (jumpMode) exitJumpMode();
+      else enterJumpMode();
+      break;
+    case 'p':
+    case 'P':
+      showPair = !showPair;
+      btnPairEl.classList.toggle('active', showPair);
+      draw();
+      break;
+    case 'Escape':
+      if (jumpMode) exitJumpMode();
+      else handled = false;
+      break;
+    default:
+      handled = false;
+  }
+  if (handled) {
+    e.preventDefault();
+    fadeHint();
   }
 });
 
